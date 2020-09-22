@@ -7,7 +7,7 @@ This sample application shows how this may be achieved in Microsoft Windows usin
 2) extracts the audio signal from the MP3 in PCM wave format.
 3) re-samples the resulting wave file from 44100 Hz to 48000 Hz using Intel's IPP.
 4) passes the 48000 Hz wave to the WASAPI audio renderer that has been opened in shared mode.
-5) allows a user to dynamically control the speed and direction of playback by re-sampling/interpolating the wave just before it is passed to the WASAPI buffer.
+5) allows a user to user to emulate a turntable by using a slider to dynamically control the speed and direction of playback by re-sampling/interpolating the wave just before it is passed to the WASAPI buffer. 
 
 **Requirements**
 
