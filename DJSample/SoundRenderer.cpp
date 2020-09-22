@@ -21,29 +21,25 @@ CWASAPIRenderer::CWASAPIRenderer(IMMDevice* Endpoint) :
     m_dwPCMBufferSize = 0;
     m_nPosition = 0;
     m_nLastPosition = 0;
-
-    InitialTheta = 0;
-    InitialTheta2 = 0;
-    InitialTheta3 = 0;
+     
     _Endpoint->AddRef();    // Since we're holding a copy of the endpoint, take a reference to it.  It'll be released in Shutdown();
-    m_nFrequency = 440;
-    m_nFrequency2 = 1240;
-    m_nFrequency3 = 1;
-    m_bInputSquare = false;
-    m_bLCOSquare = false;
-    m_nAmount = 2.0f;
-    m_bUseMic = false;
-    m_pBuffer = 0;
-    m_nVolumne = 0.5f;
-    m_lastcarrier = 0;
-    m_bCarrierInput = false;
-    m_bAM = false;
+     
     m_nSpeed = NORMAL_SPEED;
     m_bNearestSample = false;
 } 
 
 CWASAPIRenderer::~CWASAPIRenderer(void)
 {
+    if (m_pPCMDataL)
+    {
+        delete[] m_pPCMDataL;
+        m_pPCMDataL = 0;
+    }
+    if (m_pPCMDataR)
+    {
+        delete[] m_pPCMDataR;
+        m_pPCMDataR = 0;
+    }
 }
 
 #define PERIODS_PER_BUFFER 4 
@@ -65,7 +61,7 @@ bool CWASAPIRenderer::InitializeAudioEngine()
         NULL);
     if (FAILED(hr))
     {
-        printf("Unable to initialize audio client: %x.\n", hr);
+        ATLTRACE2(L"Unable to initialize audio client: %x.\n", hr);
         return false;
     }
 
@@ -75,7 +71,7 @@ bool CWASAPIRenderer::InitializeAudioEngine()
     hr = _AudioClient->GetBufferSize(&_BufferSize);
     if (FAILED(hr))
     {
-        printf("Unable to get audio client buffer: %x. \n", hr);
+        ATLTRACE2(L"Unable to get audio client buffer: %x. \n", hr);
         return false;
     }
 
@@ -84,7 +80,7 @@ bool CWASAPIRenderer::InitializeAudioEngine()
     hr = _AudioClient->GetService(IID_PPV_ARGS(&_RenderClient));
     if (FAILED(hr))
     {
-        printf("Unable to get new render client: %x.\n", hr);
+        ATLTRACE2(L"Unable to get new render client: %x.\n", hr);
         return false;
     }
 
@@ -112,7 +108,7 @@ bool CWASAPIRenderer::LoadFormat()
     HRESULT hr = _AudioClient->GetMixFormat(&_MixFormat);
     if (FAILED(hr))
     {
-        printf("Unable to get mix format on audio client: %x.\n", hr);
+        ATLTRACE2(L"Unable to get mix format on audio client: %x.\n", hr);
         return false;
     }
     assert(_MixFormat != NULL);
@@ -120,7 +116,7 @@ bool CWASAPIRenderer::LoadFormat()
     hr = _AudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, _MixFormat, NULL);
     if (hr == AUDCLNT_E_UNSUPPORTED_FORMAT)
     {
-        printf("Device does not natively support the mix format, converting to PCM.\n");
+        ATLTRACE2(L"Device does not natively support the mix format, converting to PCM.\n");
 
         //
         //  If the mix format is a float format, just try to convert the format to PCM.
@@ -144,14 +140,14 @@ bool CWASAPIRenderer::LoadFormat()
         }
         else
         {
-            printf("Mix format is not a floating point format.\n");
+            ATLTRACE2(L"Mix format is not a floating point format.\n");
             return false;
         }
 
         hr = _AudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, _MixFormat, NULL);
         if (FAILED(hr))
         {
-            printf("Format is not supported \n");
+            ATLTRACE2(L"Format is not supported \n");
             return false;
         }
     }
@@ -179,7 +175,7 @@ bool CWASAPIRenderer::CalculateMixFormatType()
         }
         else
         {
-            printf("Unknown PCM integer sample type\n");
+            ATLTRACE2(L"Unknown PCM integer sample type\n");
             return false;
         }
     }
@@ -191,11 +187,12 @@ bool CWASAPIRenderer::CalculateMixFormatType()
     }
     else
     {
-        printf("unrecognized device format.\n");
+        ATLTRACE2(L"unrecognized device format.\n");
         return false;
     }
     return true;
 }
+//--------------------------------------------------------------//
 //
 //  Initialize the renderer.
 //
@@ -207,7 +204,7 @@ bool CWASAPIRenderer::Initialize(UINT32 EngineLatency)
     _ShutdownEvent = CreateEventEx(NULL, NULL, 0, EVENT_MODIFY_STATE | SYNCHRONIZE);
     if (_ShutdownEvent == NULL)
     {
-        printf("Unable to create shutdown event: %d.\n", GetLastError());
+        ATLTRACE2(L"Unable to create shutdown event: %d.\n", GetLastError());
         return false;
     }
 
@@ -218,7 +215,7 @@ bool CWASAPIRenderer::Initialize(UINT32 EngineLatency)
     HRESULT hr = _Endpoint->Activate(__uuidof(IAudioClient), CLSCTX_INPROC_SERVER, NULL, reinterpret_cast<void**>(&_AudioClient));
     if (FAILED(hr))
     {
-        printf("Unable to activate audio client: %x.\n", hr);
+        ATLTRACE2(L"Unable to activate audio client: %x.\n", hr);
         return false;
     }
 
@@ -227,7 +224,7 @@ bool CWASAPIRenderer::Initialize(UINT32 EngineLatency)
     //
     if (!LoadFormat())
     {
-        printf("Failed to load the mix format \n");
+        ATLTRACE2(L"Failed to load the mix format \n");
         return false;
     }
 
@@ -243,7 +240,7 @@ bool CWASAPIRenderer::Initialize(UINT32 EngineLatency)
 
     return true;
 }
-
+//--------------------------------------------------------------//
 //
 //  Shut down the render code and free all the resources.
 //
@@ -273,16 +270,12 @@ void CWASAPIRenderer::Shutdown()
         _MixFormat = NULL;
     }
 }
-
+//--------------------------------------------------------------//
 bool CWASAPIRenderer::Start()
 {
-    HRESULT hr;
+    HRESULT hr; 
 
-
-
-    //
-    //  We want to pre-roll the first buffer's worth of data into the pipeline.  That way the audio engine won't glitch on startup.  
-    //
+   
 
     BYTE* pData;
 
@@ -294,7 +287,7 @@ bool CWASAPIRenderer::Start()
     _RenderThread = CreateThread(NULL, 0, WASAPIRenderThread, this, 0, NULL);
     if (_RenderThread == NULL)
     {
-        printf("Unable to create transport thread: %x.", GetLastError());
+        ATLTRACE2(L"Unable to create transport thread: %x.", GetLastError());
         return false;
     }
 
@@ -304,13 +297,13 @@ bool CWASAPIRenderer::Start()
     hr = _AudioClient->Start();
     if (FAILED(hr))
     {
-        printf("Unable to start render client: %x.\n", hr);
+        ATLTRACE2(L"Unable to start render client: %x.\n", hr);
         return false;
     }
 
     return true;
 }
-
+//--------------------------------------------------------------//
 //
 //  Stop the renderer.
 //
@@ -330,7 +323,7 @@ void CWASAPIRenderer::Stop()
     hr = _AudioClient->Stop();
     if (FAILED(hr))
     {
-        printf("Unable to stop audio client: %x\n", hr);
+        ATLTRACE2(L"Unable to stop audio client: %x\n", hr);
     }
 
     if (_RenderThread)
@@ -348,7 +341,7 @@ void CWASAPIRenderer::Stop()
 
 
 }
-
+//--------------------------------------------------------------//
 //
 //  Render thread - processes samples from the audio engine
 //
@@ -357,7 +350,26 @@ DWORD CWASAPIRenderer::WASAPIRenderThread(LPVOID Context)
     CWASAPIRenderer* renderer = static_cast<CWASAPIRenderer*>(Context);
     return renderer->DoRenderThread();
 }
-
+//--------------------------------------------------------------//
+void CWASAPIRenderer::SetBuffers(BYTE* pPCMDataL, BYTE* pPCMDataR, DWORD dwSize)
+{
+    m_Lock.Lock();
+    if (m_pPCMDataL)
+    {
+        delete[] m_pPCMDataL;
+    }
+    if (m_pPCMDataR)
+    {
+        delete[] m_pPCMDataR;
+    }
+    m_pPCMDataL = pPCMDataL;
+    m_pPCMDataR = pPCMDataR;
+    m_dwPCMBufferSize = dwSize;
+    m_nPosition = 0;
+    m_nLastPosition = 0;
+    m_Lock.Unlock();
+}
+//--------------------------------------------------------------//
 DWORD CWASAPIRenderer::DoRenderThread()
 {
     bool stillPlaying = true;
@@ -368,7 +380,7 @@ DWORD CWASAPIRenderer::DoRenderThread()
     HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(hr))
     {
-        printf("Unable to initialize COM in render thread: %x\n", hr);
+        ATLTRACE2(L"Unable to initialize COM in render thread: %x\n", hr);
         return hr;
     }
 
@@ -385,7 +397,7 @@ DWORD CWASAPIRenderer::DoRenderThread()
         mmcssHandle = AvSetMmThreadCharacteristics(L"Audio", &mmcssTaskIndex);
         if (mmcssHandle == NULL)
         {
-            printf("Unable to enable MMCSS on render thread: %d\n", GetLastError());
+            ATLTRACE2(L"Unable to enable MMCSS on render thread: %d\n", GetLastError());
         }
     }
  
@@ -406,10 +418,10 @@ DWORD CWASAPIRenderer::DoRenderThread()
             //  We need to provide the next buffer of samples to the audio renderer.  If we're done with our samples, we're done.
             //
            // if (_RenderBufferQueue == NULL)
-        {
-            //      stillPlaying = false;
-        }
-        //  else
+            {
+                //      stillPlaying = false;
+            }
+            //  else
         {
             BYTE* pData;
             UINT32 padding;
@@ -431,30 +443,13 @@ DWORD CWASAPIRenderer::DoRenderThread()
                 //  If the buffer at the head of the render buffer queue fits in the frames available, render it.  If we don't
                 //  have enough room to fit the buffer, skip this pass - we will have enough room on the next pass.
                 //
-
- 
-                while (m_pPCMDataL && m_pPCMDataR)
+                m_Lock.Lock();
+                while (m_pPCMDataL && m_pPCMDataR && m_BufferLength <= (framesAvailable * _FrameSize))
                 {
-                    //
-                    //  We know that the buffer at the head of the queue will fit, so remove it and write it into 
-                    //  the engine buffer.  Continue doing this until we no longer can fit
-                    //  the recent buffer into the engine buffer.
-                    //
-                  //  RenderBuffer *renderBuffer = _RenderBufferQueue;
-                  //  _RenderBufferQueue = renderBuffer->_Next;
-
-                    //m_BufferLength = (renderer->BufferSizePerPeriod()  * renderer->FrameSize());
-
-                    
                     UINT32 framesToWrite = m_BufferLength / _FrameSize;
                     hr = _RenderClient->GetBuffer(framesToWrite, &pData);
                     if (SUCCEEDED(hr))
                     {
-                        //
-                        //  Copy data from the render buffer to the output buffer and bump our render pointer.
-                        //
-                      //  CopyMemory(pData, renderBuffer->_Buffer, framesToWrite*_FrameSize);
-       
                         long nNumChannels = 2; 
                         for (int h = 0; h < framesToWrite * _FrameSize / 2; h += nNumChannels)
                         { 
@@ -533,13 +528,13 @@ DWORD CWASAPIRenderer::DoRenderThread()
                         hr = _RenderClient->ReleaseBuffer(framesToWrite, 0);
                         if (!SUCCEEDED(hr))
                         {
-                            printf("Unable to release buffer: %x\n", hr);
+                            ATLTRACE2(L"Unable to release buffer: %x\n", hr);
                             stillPlaying = false;
                         }
                     }
                     else
                     {
-                        printf("Unable to release buffer: %x\n", hr);
+                        ATLTRACE2(L"Unable to release buffer: %x\n", hr);
                         stillPlaying = false;
                     }
                     //
@@ -563,10 +558,11 @@ DWORD CWASAPIRenderer::DoRenderThread()
                     }
                     else
                     {
-                        printf("Unable to get current padding: %x\n", hr);
+                        ATLTRACE2(L"Unable to get current padding: %x\n", hr);
                         stillPlaying = false;
                     }
                 }
+                m_Lock.Unlock();
             }
         }
         break;

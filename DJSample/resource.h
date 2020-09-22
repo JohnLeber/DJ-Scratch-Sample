@@ -9,7 +9,11 @@
 #define IDR_MAINFRAME                   128
 #define IDC_EDIT1                       1000
 #define IDC_SLIDER1                     1003
-#define IDC_BUTTON1                     1004
+#define IDC_NORMAL_SPEED                1004
+#define IDC_FAST_FWD                    1005
+#define IDC_STOP                        1006
+#define IDC_REWIND                      1007
+#define IDC_REWIND2                     1008
 
 // Next default values for new objects
 // 
