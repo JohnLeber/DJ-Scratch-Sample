@@ -11,10 +11,10 @@ This sample application shows how this may be achieved in Microsoft Windows usin
 
 **Requirements**
 
-1) The project was written using Visual studio 2019 with the MFC option installed.
-2) Intel's IPP library must be installed. The version used here is 2020.2.254
+1) The project was written using Visual studio 2019 (make sure the desktop c++ and MFC options are installed).
+2) [Intel's IPP library](https://software.seek.intel.com/performance-libraries) must be installed. The version used here is 2020.2.254
 
 **Credits**
 
-1) The mp3 loading code was primarily written from [here](http://code4k.blogspot.com/2010/05/playing-mp3-in-c-using-plain-windows.html)
+1) The mp3 loading code was primarily written from [here](http://code4k.blogspot.com/2010/05/playing-mp3-in-c-using-plain-windows.html) or [here](https://xoofx.com/blog/2010/05/21/playing-mp3-in-c-using-plain-windows/)
 2) The WASAPI code was modified from [here](https://github.com/microsoft/Windows-classic-samples/blob/master/Samples/Win7Samples/multimedia/audio/RenderSharedTimerDriven/WASAPIRenderer.cpp)
