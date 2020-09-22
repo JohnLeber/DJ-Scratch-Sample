@@ -2,7 +2,7 @@
 
 DJ hardware controllers allow DJs to emulate traditional vinyl turntables by sending signals from the controller turntable to the PC DJ software in order to alter the speed of the PC audio playback thus emulating "scratching". This technique has given DJs the option of replacing suitcases of vinyl records with a disk of MP3 files. For this to be possible the PC software must be able to dynamically resample the audio signal so that the speed and direction of playback can be controlled with as little latency as possible.
 
-This sample application shows how this may be achieved in Microsoft Windows using [WASAPI](https://docs.microsoft.com/en-us/windows/win32/coreaudio/wasapi) and some help from Intel's IPP library. The application does the following:
+This sample application shows how this may be achieved in Microsoft Windows using [WASAPI](https://docs.microsoft.com/en-us/windows/win32/coreaudio/wasapi) and some help from [Intel's IPP library](https://software.intel.com/content/www/us/en/develop/tools/integrated-performance-primitives.html). The application does the following:
 1) allows a user to select an MP3 file. The MP3 file must have exactly two channels (i.e. stereo) and be sampled at 44100Hz.
 2) extracts the audio signal from the MP3 in PCM wave format.
 3) re-samples the resulting wave file from 44100 Hz to 48000 Hz using Intel's IPP.
