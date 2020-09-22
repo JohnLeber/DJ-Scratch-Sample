@@ -85,6 +85,7 @@ BEGIN_MESSAGE_MAP(CDJSampleDlg, CDialogEx)
     ON_BN_CLICKED(IDC_REWIND, &CDJSampleDlg::OnBnClickedRewind)
     ON_BN_CLICKED(IDC_STOP, &CDJSampleDlg::OnBnClickedStop)
     ON_BN_CLICKED(IDC_FAST_FWD, &CDJSampleDlg::OnBnClickedFastFwd)
+    ON_BN_CLICKED(IDC_NEAREST_SAMPLE, &CDJSampleDlg::OnBnClickedNearestSample)
 END_MESSAGE_MAP()
 //--------------------------------------------------------------------//
 // CDJSampleDlg message handlers
@@ -428,3 +429,7 @@ void CDJSampleDlg::OnBnClickedFastFwd()
     m_pRenderer->SetSpeed(2 * NORMAL_SPEED);
 }
 //--------------------------------------------------------------------//
+void CDJSampleDlg::OnBnClickedNearestSample()
+{
+    m_pRenderer->SetNearestSample(IsDlgButtonChecked(IDC_NEAREST_SAMPLE) == BST_CHECKED);
+}

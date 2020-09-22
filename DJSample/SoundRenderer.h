@@ -41,10 +41,11 @@ public:
     STDMETHOD_(ULONG, Release)();
     
     void SetBuffers(BYTE* pPCMDataL, BYTE* pPCMDataR, DWORD dwSize);
-   
+    void SetNearestSample(BOOL bNearestSample);
     
 private:
     CCriticalSection m_Lock;//lock buffers
+    LONG m_nNearestSample;
     long m_nNumChannels;
     LONG m_nSpeed;
     bool m_bNearestSample;

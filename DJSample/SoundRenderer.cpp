@@ -21,11 +21,10 @@ CWASAPIRenderer::CWASAPIRenderer(IMMDevice* Endpoint) :
     m_dwPCMBufferSize = 0;
     m_nPosition = 0;
     m_nLastPosition = 0;
-     
+    m_nNearestSample = 0;
     _Endpoint->AddRef();    // Since we're holding a copy of the endpoint, take a reference to it.  It'll be released in Shutdown();
      
-    m_nSpeed = NORMAL_SPEED;
-    m_bNearestSample = false;
+    m_nSpeed = NORMAL_SPEED; 
 } 
 
 CWASAPIRenderer::~CWASAPIRenderer(void)
@@ -351,6 +350,11 @@ DWORD CWASAPIRenderer::WASAPIRenderThread(LPVOID Context)
     return renderer->DoRenderThread();
 }
 //--------------------------------------------------------------//
+void CWASAPIRenderer::SetNearestSample(BOOL bNearestSample)
+{
+    InterlockedExchange(&m_nNearestSample, bNearestSample ? 1 : 0);
+}
+//--------------------------------------------------------------//
 void CWASAPIRenderer::SetBuffers(BYTE* pPCMDataL, BYTE* pPCMDataR, DWORD dwSize)
 {
     m_Lock.Lock();
@@ -466,6 +470,7 @@ DWORD CWASAPIRenderer::DoRenderThread()
                             }
                             else if ( m_nSpeed != NORMAL_SPEED)//speed up or slowed down
                             {
+                                //we should really put this through a low pass filter first perhaps use the butterwiorth filter functions from Intel's IPP...
                                 wLeft = 0;
                                 wRight = 0;
                                 float nSpeed = m_nSpeed / (float)NORMAL_SPEED;
@@ -478,14 +483,20 @@ DWORD CWASAPIRenderer::DoRenderThread()
                                 if (nPos1 < m_dwPCMBufferSize / 2 && nPos1 > 0 && nPos2 > 0)
                                 {
                                     float weight = nPosition - nPos1;
+                                    //first the left channel
                                     w1 = ((short*)m_pPCMDataL)[nPos1];
                                     w2 = ((short*)m_pPCMDataL)[nPos2];
                                     wLeft = w1 + (w2 - w1) * weight;
-                                    if (m_bNearestSample) wLeft = w1;
+                                    if (m_nNearestSample) {
+                                        wLeft = w1;//in this case, do not interpolate, just take the nearest sample
+                                    }
+                                    //and again for the right channel
                                     w1 = ((WORD*)m_pPCMDataR)[nPos1];
                                     w2 = ((WORD*)m_pPCMDataR)[nPos2];
                                     wRight = w1 * (1 - weight) + w2 * weight;
-                                    if (m_bNearestSample) wRight = w1;
+                                    if (m_nNearestSample) {
+                                        wRight = w1;
+                                    }
                                     m_nPosition = nPos2;
                                 }
                                 if (m_nPosition > m_dwPCMBufferSize / 2)

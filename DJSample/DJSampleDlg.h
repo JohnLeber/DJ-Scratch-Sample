@@ -56,4 +56,5 @@ public:
 	afx_msg void OnBnClickedRewind();
 	afx_msg void OnBnClickedStop();
 	afx_msg void OnBnClickedFastFwd();
+	afx_msg void OnBnClickedNearestSample();
 };
