@@ -5,7 +5,7 @@ DJ hardware controllers allow DJs to emulate traditional vinyl turntables by sen
 This sample application shows how this may be achieved in Microsoft Windows using [WASAPI](https://docs.microsoft.com/en-us/windows/win32/coreaudio/wasapi) and some help from [Intel's IPP library](https://software.intel.com/content/www/us/en/develop/tools/integrated-performance-primitives.html). The application does the following:
 1) allows a user to select an MP3 file. The MP3 file must have exactly two channels (i.e. stereo) and be sampled at 44100Hz.
 2) extracts the audio signal from the MP3 in PCM wave format.
-3) re-samples the resulting wave file from 44100 Hz to 48000 Hz using Intel's IPP.
+3) uses Intel IPP to re-sample the resulting wave file from 44100Hz to the sampling frequency used by WASAPI (normally 48000Hz).
 4) passes the 48000 Hz wave to the WASAPI audio renderer that has been opened in shared mode.
 5) allows a user to emulate a turntable by using a slider to dynamically control the speed and direction of playback by re-sampling/interpolating the wave just before it is passed to the WASAPI buffer.
 
