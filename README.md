@@ -11,8 +11,8 @@ This sample application shows how this may be achieved in Microsoft Windows usin
 
 **Future work**
 
-1) when the signal is speed up it should really be passed through a low pass filter just before the last step, but at the time of writing this step has been omitted.
-2) the slider is moved backwards and forwards rapidly to simulate scratching, however when I do this it dones't sound authentic to me. Rapidly rotating a real turntable may be producing other scratchy or analog sounds other than the actual music. Perhaps these could be recorrded and loaded into the application to be mixed with the existing audio output.
+1) When the signal is speed up it should really be passed through a low pass filter just before the last step, but at the time of writing this step has been omitted.
+2) The slider is moved backwards and forwards rapidly to simulate scratching. When I do this however, it dones't sound authentic to me. Rapidly rotating a real turntable with real vinyl may be producing other "scratchy" or analog sounds other than the actual music. Perhaps these could be recorrded, loaded into the application and then mixed with the existing audio output.
 
 **Requirements**
 
