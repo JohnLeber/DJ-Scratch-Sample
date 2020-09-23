@@ -18,5 +18,5 @@ NOTE: when the signal is speed up it should really be passed through a low pass 
 
 **Credits**
 
-1) The mp3 loading code was primarily written by Alexandre Mutel and is available [here](http://code4k.blogspot.com/2010/05/playing-mp3-in-c-using-plain-windows.html) or [here](https://xoofx.com/blog/2010/05/21/playing-mp3-in-c-using-plain-windows/)
-2) The WASAPI code was modified from [here](https://github.com/microsoft/Windows-classic-samples/blob/master/Samples/Win7Samples/multimedia/audio/RenderSharedTimerDriven/WASAPIRenderer.cpp)
+1) The mp3 loading code was primarily written by Alexandre Mutel and is available [here](http://code4k.blogspot.com/2010/05/playing-mp3-in-c-using-plain-windows.html) or [here](https://xoofx.com/blog/2010/05/21/playing-mp3-in-c-using-plain-windows/).
+2) The WASAPI code was modified from [here](https://github.com/microsoft/Windows-classic-samples/blob/master/Samples/Win7Samples/multimedia/audio/RenderSharedTimerDriven/WASAPIRenderer.cpp).
