@@ -12,7 +12,7 @@ This [sample application](https://github.com/nodecomplete/DJ-Scratch-Sample/blob
 **Future work**
 
 1) When the signal is played faster than the original speed then it should really be passed through a low pass filter just before the last step. This is to avoid potential aliasing artifacts.
-2) The slider is moved backwards and forwards rapidly to simulate scratching. When I do this however, it dones't sound authentic to me. Rapidly rotating a real turntable with real vinyl may be producing other "scratchy" or analog sounds other than the actual music. Perhaps these could be recorrded, loaded into the application and then mixed with the existing audio output.
+2) The slider is moved backwards and forwards rapidly to simulate scratching. When I do this however, it doesn't sound authentic to me. Rapidly rotating a real turntable with real vinyl may be producing other "scratchy" or analog sounds other than the actual music. Perhaps these could be recorrded, loaded into the application and then mixed with the existing audio output.
 
 **Build Requirements**
 
