@@ -239,15 +239,15 @@ HCURSOR CDJSampleDlg::OnQueryDragIcon()
 //--------------------------------------------------------------------//
 void CDJSampleDlg::OnEnChangeEdit1()
 {
-	CString strPath;
-	GetDlgItemText(IDC_EDIT1, strPath);
+    CString strPath;
+    GetDlgItemText(IDC_EDIT1, strPath);
     if (strPath.Right(4) != L".mp3") {
         AfxMessageBox(L"unrecognized file type");
         return;
     } 
 
     CWaitCursor wait;
-	CMP3* pMP3 = new CMP3();
+    CMP3* pMP3 = new CMP3();
     if (SUCCEEDED(pMP3->OpenFromFile(strPath.GetBuffer(0))))
     {
         BYTE* pPCMData = 0;
