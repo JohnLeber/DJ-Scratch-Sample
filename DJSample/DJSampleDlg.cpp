@@ -74,11 +74,10 @@ void CDJSampleDlg::DoDataExchange(CDataExchange* pDX)
 }
 //--------------------------------------------------------------------//
 BEGIN_MESSAGE_MAP(CDJSampleDlg, CDialogEx)
-	ON_WM_SYSCOMMAND()
-	ON_WM_PAINT()
-	ON_WM_QUERYDRAGICON() 
-	ON_EN_CHANGE(IDC_EDIT1, &CDJSampleDlg::OnEnChangeEdit1)
-    ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &CDJSampleDlg::OnNMCustomdrawSlider1)
+    ON_WM_SYSCOMMAND()
+    ON_WM_PAINT()
+    ON_WM_QUERYDRAGICON() 
+    ON_EN_CHANGE(IDC_EDIT1, &CDJSampleDlg::OnEnChangeEdit1) 
     ON_WM_HSCROLL()
     ON_BN_CLICKED(IDC_NORMAL_SPEED, &CDJSampleDlg::OnResetSpeed)
     ON_BN_CLICKED(IDC_REWIND2, &CDJSampleDlg::OnBnClickedRewind2)
@@ -323,7 +322,14 @@ void CDJSampleDlg::ResampleIPP(
     DWORD dwSrcSize,
     vector<short>& vOut)     // output pcm file
 {
-    //based on https://software.intel.com/content/www/us/en/develop/documentation/ipp-dev-reference/top/volume-1-signal-and-data-processing/filtering-functions/filtering-functions-1/polyphase-resampling-functions/resamplepolyphasegetfixedfilter.html
+    if (inRate <= 0 || outRate <= 0)
+    {
+        ATLASSERT(!L"inRate <= 0 || outRate <= 0");
+        return;
+    }
+    long nEstimatedOutSize = dwSrcSize * ((float)(outRate + 1) / (float)inRate);
+    vOut.reserve(nEstimatedOutSize);//reduce dynamic memory allocations
+    //This code is based on the sample from https://software.intel.com/content/www/us/en/develop/documentation/ipp-dev-reference/top/volume-1-signal-and-data-processing/filtering-functions/filtering-functions-1/polyphase-resampling-functions/resamplepolyphasegetfixedfilter.html
     short* inBuf, * outBuf;
     int bufsize = 4096;
     int history = 128;
@@ -331,6 +337,7 @@ void CDJSampleDlg::ResampleIPP(
     int lastread = history;
     int inCount = 0, outCount = 0, inLen, outLen;
     int size, len, height;
+
     IppsResamplingPolyphaseFixed_16s* state;
     ippsResamplePolyphaseFixedGetSize_16s(inRate, outRate, 2 * (history - 1), &size, &len, &height, ippAlgHintAccurate);
     state = (IppsResamplingPolyphaseFixed_16s*)ippsMalloc_8u(size);
@@ -340,7 +347,8 @@ void CDJSampleDlg::ResampleIPP(
     ippsZero_16s(inBuf, history);
   
     long nCurrentPos = 0;
-    while ((inLen = ReadBytes(inBuf + lastread, bufsize - lastread, pSrc, dwSrcSize, nCurrentPos)) > 0) {
+    while ((inLen = ReadBytes(inBuf + lastread, bufsize - lastread, pSrc, dwSrcSize, nCurrentPos)) > 0) 
+    {
         inCount += inLen;
         lastread += inLen;
         ippsResamplePolyphaseFixed_16s(inBuf, lastread - history - (int)time,
@@ -368,14 +376,7 @@ void CDJSampleDlg::ResampleIPP(
     ippsFree(outBuf);
     ippsFree(inBuf);
     ippsFree(state);
-}
-//---------------------------------------------------------------//
-void CDJSampleDlg::OnNMCustomdrawSlider1(NMHDR* pNMHDR, LRESULT* pResult)
-{
-    LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
-    // TODO: Add your control notification handler code here
-    *pResult = 0;
-}
+} 
 //---------------------------------------------------------------//
 void CDJSampleDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {

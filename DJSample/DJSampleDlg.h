@@ -48,8 +48,7 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public: 
-	afx_msg void OnEnChangeEdit1();
-	afx_msg void OnNMCustomdrawSlider1(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnEnChangeEdit1(); 
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnResetSpeed();
 	afx_msg void OnBnClickedRewind2();

@@ -6,7 +6,7 @@
 #include <mmsystem.h>
 #include <math.h>
 #include <limits.h>  
-
+#define PERIODS_PER_BUFFER 4 
 CWASAPIRenderer::CWASAPIRenderer(IMMDevice* Endpoint) :
     _RefCount(1),
     _Endpoint(Endpoint),
@@ -26,9 +26,10 @@ CWASAPIRenderer::CWASAPIRenderer(IMMDevice* Endpoint) :
      
     m_nSpeed = NORMAL_SPEED; 
 } 
-
+//------------------------------------------------------------------------//
 CWASAPIRenderer::~CWASAPIRenderer(void)
 {
+    //delete left and right audio buffers
     if (m_pPCMDataL)
     {
         delete[] m_pPCMDataL;
@@ -40,9 +41,7 @@ CWASAPIRenderer::~CWASAPIRenderer(void)
         m_pPCMDataR = 0;
     }
 }
-
-#define PERIODS_PER_BUFFER 4 
-
+//------------------------------------------------------------------------//
 bool CWASAPIRenderer::InitializeAudioEngine()
 {
     REFERENCE_TIME bufferDuration = _EngineLatencyInMS * 10000 * PERIODS_PER_BUFFER;
@@ -85,6 +84,7 @@ bool CWASAPIRenderer::InitializeAudioEngine()
 
     return true;
 }
+//------------------------------------------------------------------------//
 //
 //  That buffer duration is calculated as being PERIODS_PER_BUFFER x the
 //  periodicity, so each period we're going to see 1/PERIODS_PER_BUFFERth 
@@ -94,7 +94,7 @@ UINT32 CWASAPIRenderer::BufferSizePerPeriod()
 {
     return _BufferSize / PERIODS_PER_BUFFER;
 }
-
+//------------------------------------------------------------------------//
 //
 //  Retrieve the format we'll use to rendersamples.
 //
@@ -158,7 +158,7 @@ bool CWASAPIRenderer::LoadFormat()
     }
     return true;
 }
-
+//------------------------------------------------------------------------//
 //
 //  Crack open the mix format and determine what kind of samples are being rendered.
 //
@@ -272,14 +272,8 @@ void CWASAPIRenderer::Shutdown()
 //--------------------------------------------------------------//
 bool CWASAPIRenderer::Start()
 {
-    HRESULT hr; 
-
-   
-
-    BYTE* pData;
-
-
-
+    HRESULT hr;   
+     
     //
     //  Now create the thread which is going to drive the renderer.
     //
@@ -332,13 +326,6 @@ void CWASAPIRenderer::Stop()
         CloseHandle(_RenderThread);
         _RenderThread = NULL;
     }
-
-    //
-    //  Drain the buffers in the render buffer queue.
-    //
-
-
-
 }
 //--------------------------------------------------------------//
 //
@@ -355,6 +342,10 @@ void CWASAPIRenderer::SetNearestSample(BOOL bNearestSample)
     InterlockedExchange(&m_nNearestSample, bNearestSample ? 1 : 0);
 }
 //--------------------------------------------------------------//
+//
+//Pass a new decoded mp3 with pointers to the left and right channels.
+//Reset the current position and delete the old buffers
+//
 void CWASAPIRenderer::SetBuffers(BYTE* pPCMDataL, BYTE* pPCMDataR, DWORD dwSize)
 {
     m_Lock.Lock();
@@ -421,11 +412,6 @@ DWORD CWASAPIRenderer::DoRenderThread()
             //
             //  We need to provide the next buffer of samples to the audio renderer.  If we're done with our samples, we're done.
             //
-           // if (_RenderBufferQueue == NULL)
-            {
-                //      stillPlaying = false;
-            }
-            //  else
         {
             BYTE* pData;
             UINT32 padding;
@@ -507,18 +493,7 @@ DWORD CWASAPIRenderer::DoRenderThread()
                                 {
                                     m_nPosition = 0;
                                     m_nLastPosition = 0;
-                                }
-                             /*   else if(nSpeed > 0)
-                                {                                    
-                                    m_nPosition = m_dwPCMBufferSize / 2 - 1;
-                                    m_nLastPosition = m_nPosition;
-                                }
-                                else
-                                {
-                                    m_nPosition = 0;
-                                    m_nLastPosition = 0;
-                                }*/
-                                 
+                                }  
                             } 
                            
                             if (m_nPosition + 1 < m_dwPCMBufferSize / 2)
@@ -533,9 +508,7 @@ DWORD CWASAPIRenderer::DoRenderThread()
                                 *(pS + 1) = 0;
                             }
                             
-                        }
-                        //if (InitialTheta != NULL)
-                        
+                        } 
                         hr = _RenderClient->ReleaseBuffer(framesToWrite, 0);
                         if (!SUCCEEDED(hr))
                         {
@@ -547,11 +520,7 @@ DWORD CWASAPIRenderer::DoRenderThread()
                     {
                         ATLTRACE2(L"Unable to release buffer: %x\n", hr);
                         stillPlaying = false;
-                    }
-                    //
-                    //  We're done with this set of samples, free it.
-                    //
-                    //delete renderBuffer;
+                    } 
 
                     //
                     //  Now recalculate the padding and frames available because we've consumed
@@ -596,11 +565,12 @@ DWORD CWASAPIRenderer::DoRenderThread()
     CoUninitialize();
     return 0;
 }
-
+//------------------------------------------------------------------------//
 void CWASAPIRenderer::SetSpeed(LONG nSpeed)
 {
     InterlockedExchange(&m_nSpeed, nSpeed);
 }
+//------------------------------------------------------------------------//
 //
 //  IUnknown
 //
