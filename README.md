@@ -5,7 +5,7 @@ DJ hardware controllers allow DJs to emulate traditional vinyl turntables by sen
 2) extracts the audio signal from the MP3 in PCM wave format.
 3) uses Intel IPP to re-sample the resulting wave file from 44100Hz to the sampling frequency used by WASAPI (normally 48000Hz).
 4) duplicates the resulting wave form and passes it through a low pass filter with a cutoff just below 0.25 the sampling frequency. This is to avoid potential aliasing artifacts if played back faster than the original speed. The application currently supports playback at a maximum of twice the original recorded speed. Any higher than this then the cutoff frequency would need to be lower then 0.25. When played back at the normal speed or slower the first (unfiltered) waveform is used.
-5) passes the 48000 Hz wave to the WASAPI audio renderer that has been opened in shared mode.
+5) passes the two 48000 Hz signals to the WASAPI audio renderer.
 6) allows a user to emulate a turntable by using a slider to dynamically control the speed and direction of playback by re-sampling/interpolating the wave just before it is passed to the WASAPI buffer.
 
 
