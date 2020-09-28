@@ -2,18 +2,31 @@
 #include <MMDeviceAPI.h>
 #include <AudioClient.h>
 #include <AudioPolicy.h>
-
+//const long LOWPASS_FILTER_ORDER = 9;
 #define NORMAL_SPEED 50 
+class CLowPassIIR;
 //-------------------------------------------------------------------------------------//
 class CWASAPIRenderer : public IUnknown
 {
     LONG m_nExitThread;
 
-    BYTE* m_pPCMDataL;
-    BYTE* m_pPCMDataR;
-    DWORD m_dwPCMBufferSize;
+    WORD* m_pPCMDataL;
+    WORD* m_pPCMDataR;
+    WORD* m_pPCMFilteredDataL;
+    WORD* m_pPCMFilteredDataR;
+    int m_nPCMBufferSize;
     long m_nPosition;
     float m_nLastPosition;
+    CLowPassIIR* m_pLeftIIR;
+    CLowPassIIR* m_pRightIIR;
+    //Ipp8u* m_pIIRWorkingBuffer;
+    //Ipp64f m_pTaps[2 * (LOWPASS_FILTER_ORDER + 1)]; 
+    //IppsIIRState_64f* m_pCTX;
+    //Ipp32f* m_pFilterX;
+    //Ipp32f* m_pFilterY;
+    //Ipp32f* m_pDelayLine;
+    //long m_nFilterCutoff; 
+
 public:
    // CWASAPIRenderer(void);
     ~CWASAPIRenderer(void);
@@ -40,11 +53,13 @@ public:
     STDMETHOD_(ULONG, AddRef)();
     STDMETHOD_(ULONG, Release)();
     
-    void SetBuffers(BYTE* pPCMDataL, BYTE* pPCMDataR, DWORD dwSize);
+    void SetBuffers(WORD* pPCMDataL, WORD* pPCMDataR, WORD* pPCMFilteredDataL, WORD* pPCMFilteredDataR, int dwSize);
     void SetNearestSample(BOOL bNearestSample);
+    void EnableLowPassFilter(BOOL bLowPassFilter);
     
 private:
     CCriticalSection m_Lock;//lock buffers
+    LONG m_nLowPassFilter;
     LONG m_nNearestSample;
     long m_nNumChannels;
     LONG m_nSpeed;

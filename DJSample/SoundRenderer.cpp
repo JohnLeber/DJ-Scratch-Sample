@@ -6,7 +6,7 @@
 #include <mmsystem.h>
 #include <math.h>
 #include <limits.h>  
-
+#include "lowpassIIR.h"
 CWASAPIRenderer::CWASAPIRenderer(IMMDevice* Endpoint) :
     _RefCount(1),
     _Endpoint(Endpoint),
@@ -18,17 +18,26 @@ CWASAPIRenderer::CWASAPIRenderer(IMMDevice* Endpoint) :
 {
     m_pPCMDataL = 0;
     m_pPCMDataR = 0;
-    m_dwPCMBufferSize = 0;
+    m_pPCMFilteredDataL = 0;
+    m_pPCMFilteredDataR = 0;
+    m_nPCMBufferSize = 0;
     m_nPosition = 0;
     m_nLastPosition = 0;
     m_nNearestSample = 0;
     _Endpoint->AddRef();    // Since we're holding a copy of the endpoint, take a reference to it.  It'll be released in Shutdown();
      
+    m_nLowPassFilter = 1; 
+
     m_nSpeed = NORMAL_SPEED; 
 } 
 
 CWASAPIRenderer::~CWASAPIRenderer(void)
 {
+    /*if (m_pIIRWorkingBuffer)
+    {
+        ippsFree(m_pIIRWorkingBuffer);
+        m_pIIRWorkingBuffer = 0;
+    }*/
     if (m_pPCMDataL)
     {
         delete[] m_pPCMDataL;
@@ -39,6 +48,16 @@ CWASAPIRenderer::~CWASAPIRenderer(void)
         delete[] m_pPCMDataR;
         m_pPCMDataR = 0;
     }
+    if (m_pPCMFilteredDataL)
+    {
+        delete[] m_pPCMFilteredDataL;
+        m_pPCMFilteredDataL = 0;
+    }
+    if (m_pPCMFilteredDataR)
+    {
+        delete[] m_pPCMFilteredDataR;
+        m_pPCMFilteredDataR = 0;
+    } 
 }
 
 #define PERIODS_PER_BUFFER 4 
@@ -83,8 +102,10 @@ bool CWASAPIRenderer::InitializeAudioEngine()
         return false;
     }
 
+ 
     return true;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  That buffer duration is calculated as being PERIODS_PER_BUFFER x the
 //  periodicity, so each period we're going to see 1/PERIODS_PER_BUFFERth 
@@ -94,7 +115,7 @@ UINT32 CWASAPIRenderer::BufferSizePerPeriod()
 {
     return _BufferSize / PERIODS_PER_BUFFER;
 }
-
+////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  Retrieve the format we'll use to rendersamples.
 //
@@ -272,14 +293,8 @@ void CWASAPIRenderer::Shutdown()
 //--------------------------------------------------------------//
 bool CWASAPIRenderer::Start()
 {
-    HRESULT hr; 
-
-   
-
-    BYTE* pData;
-
-
-
+    HRESULT hr = S_OK;
+     
     //
     //  Now create the thread which is going to drive the renderer.
     //
@@ -355,7 +370,12 @@ void CWASAPIRenderer::SetNearestSample(BOOL bNearestSample)
     InterlockedExchange(&m_nNearestSample, bNearestSample ? 1 : 0);
 }
 //--------------------------------------------------------------//
-void CWASAPIRenderer::SetBuffers(BYTE* pPCMDataL, BYTE* pPCMDataR, DWORD dwSize)
+void CWASAPIRenderer::EnableLowPassFilter(BOOL bLowPassFilter)
+{
+    InterlockedExchange(&m_nLowPassFilter, bLowPassFilter ? 1 : 0);
+} 
+//--------------------------------------------------------------//
+void CWASAPIRenderer::SetBuffers(WORD* pPCMDataL, WORD* pPCMDataR, WORD* pPCMFilteredDataL, WORD* pPCMFilteredDataR, int nSize)
 {
     m_Lock.Lock();
     if (m_pPCMDataL)
@@ -366,9 +386,19 @@ void CWASAPIRenderer::SetBuffers(BYTE* pPCMDataL, BYTE* pPCMDataR, DWORD dwSize)
     {
         delete[] m_pPCMDataR;
     }
+    if (m_pPCMFilteredDataL)
+    {
+        delete[] m_pPCMFilteredDataL;
+    }
+    if (m_pPCMFilteredDataR)
+    {
+        delete[] m_pPCMFilteredDataR;
+    }
+    m_pPCMFilteredDataL = pPCMFilteredDataL;
+    m_pPCMFilteredDataR = pPCMFilteredDataR;
     m_pPCMDataL = pPCMDataL;
     m_pPCMDataR = pPCMDataR;
-    m_dwPCMBufferSize = dwSize;
+    m_nPCMBufferSize = nSize;
     m_nPosition = 0;
     m_nLastPosition = 0;
     m_Lock.Unlock();
@@ -380,7 +410,7 @@ DWORD CWASAPIRenderer::DoRenderThread()
     HANDLE waitArray[1] = { _ShutdownEvent };
     HANDLE mmcssHandle = NULL;
     DWORD mmcssTaskIndex = 0;
-
+    double InitialTheta = 0;
     HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(hr))
     {
@@ -447,10 +477,13 @@ DWORD CWASAPIRenderer::DoRenderThread()
                 //  If the buffer at the head of the render buffer queue fits in the frames available, render it.  If we don't
                 //  have enough room to fit the buffer, skip this pass - we will have enough room on the next pass.
                 //
+                double theta = InitialTheta;
+                
                 m_Lock.Lock();
                 while (m_pPCMDataL && m_pPCMDataR && m_BufferLength <= (framesAvailable * _FrameSize))
                 {
                     UINT32 framesToWrite = m_BufferLength / _FrameSize;
+                    
                     hr = _RenderClient->GetBuffer(framesToWrite, &pData);
                     if (SUCCEEDED(hr))
                     {
@@ -464,64 +497,62 @@ DWORD CWASAPIRenderer::DoRenderThread()
                             short w2 = 0;
                             if (m_nSpeed == NORMAL_SPEED)//normal speed
                             {
-                                wLeft  = ((WORD*)m_pPCMDataL)[m_nPosition];
-                                wRight = ((WORD*)m_pPCMDataR)[m_nPosition];
-                                m_nLastPosition = m_nPosition;
+                                wLeft  = m_pPCMDataL[m_nPosition];
+                                wRight = m_pPCMDataR[m_nPosition]; 
+                                m_nLastPosition = (float)m_nPosition;
                             }
                             else if ( m_nSpeed != NORMAL_SPEED)//speed up or slowed down
-                            {
-                                //we should really put this through a low pass filter first perhaps use the butterwiorth filter functions from Intel's IPP...
+                            { 
+                                WORD* pLeftChannel  = m_pPCMDataL;
+                                WORD* pRightChannel = m_pPCMDataR;
+                                if (m_nLowPassFilter > 0 && (m_nSpeed > NORMAL_SPEED || m_nSpeed < NORMAL_SPEED))
+                                {//if playing back at a faster speed, play the wave that has beeen filtered through the low pass filter to avoid potenmtial aliasing artifacts
+                                    pLeftChannel = m_pPCMFilteredDataL;
+                                    pRightChannel = m_pPCMFilteredDataL;
+                                }
                                 wLeft = 0;
                                 wRight = 0;
                                 float nSpeed = m_nSpeed / (float)NORMAL_SPEED;
                                 //if nSpeed is -ve then we are playing the wave form in reverse
                                 float nPosition = m_nLastPosition + nSpeed;
                                 m_nLastPosition = nPosition;
-                                long nPos1 = floor(nPosition);
-                                long nPos2 = nPos1 + 1;// ceil(nPosition);
+                                int nPos1 = (int)floor(nPosition);
+                                int nPos2 = nPos1 + 1;// ceil(nPosition);
                                 if (nSpeed < 0) nPos2 = nPos1 + 1;                                
-                                if (nPos1 < m_dwPCMBufferSize / 2 && nPos1 > 0 && nPos2 > 0)
+                                if (nPos1 < m_nPCMBufferSize / 2 && nPos1 > 0 && nPos2 > 0)
                                 {
                                     float weight = nPosition - nPos1;
                                     //first the left channel
-                                    w1 = ((short*)m_pPCMDataL)[nPos1];
-                                    w2 = ((short*)m_pPCMDataL)[nPos2];
+                                    w1 = (short)pLeftChannel[nPos1];
+                                    w2 = (short)pLeftChannel[nPos2];
+                                     
                                     wLeft = w1 + (w2 - w1) * weight;
                                     if (m_nNearestSample) {
                                         wLeft = w1;//in this case, do not interpolate, just take the nearest sample
                                     }
                                     //and again for the right channel
-                                    w1 = ((WORD*)m_pPCMDataR)[nPos1];
-                                    w2 = ((WORD*)m_pPCMDataR)[nPos2];
-                                    wRight = w1 * (1 - weight) + w2 * weight;
+                                    w1 = pRightChannel[nPos1];
+                                    w2 = pRightChannel[nPos2];
+                                    wRight = w1 + (w2 - w1) * weight;
                                     if (m_nNearestSample) {
                                         wRight = w1;
                                     }
                                     m_nPosition = nPos2;
                                 }
-                                if (m_nPosition > m_dwPCMBufferSize / 2)
+                                if (m_nPosition > m_nPCMBufferSize / 2)
                                 {
-                                    m_nPosition = m_dwPCMBufferSize / 2;
+                                    m_nPosition = m_nPCMBufferSize / 2;
                                 }
                                 else if (m_nPosition < 0 || m_nLastPosition < 0)
                                 {
                                     m_nPosition = 0;
                                     m_nLastPosition = 0;
-                                }
-                             /*   else if(nSpeed > 0)
-                                {                                    
-                                    m_nPosition = m_dwPCMBufferSize / 2 - 1;
-                                    m_nLastPosition = m_nPosition;
-                                }
-                                else
-                                {
-                                    m_nPosition = 0;
-                                    m_nLastPosition = 0;
-                                }*/
-                                 
+                                }  
                             } 
-                           
-                            if (m_nPosition + 1 < m_dwPCMBufferSize / 2)
+
+                            
+
+                            if (m_nPosition + 1 < m_nPCMBufferSize / 2)
                             {
                                 *pS = wLeft;
                                 *(pS + 1) = wRight;
@@ -574,6 +605,7 @@ DWORD CWASAPIRenderer::DoRenderThread()
                     }
                 }
                 m_Lock.Unlock();
+                InitialTheta = theta;
             }
         }
         break;

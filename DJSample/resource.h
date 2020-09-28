@@ -8,6 +8,7 @@
 #define IDD_DJSAMPLE_DIALOG             102
 #define IDR_MAINFRAME                   128
 #define IDC_EDIT1                       1000
+#define IDC_PATH                        1000
 #define IDC_SLIDER1                     1003
 #define IDC_NORMAL_SPEED                1004
 #define IDC_FAST_FWD                    1005

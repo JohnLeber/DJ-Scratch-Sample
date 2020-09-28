@@ -18,6 +18,9 @@ using namespace std;
 #include <ipps.h>
 //#include <ippcore.h>
 //#include <ippvm.h>
+
+const long LOWPASS_FILTER_ORDER = 8;
+
 template <class T> void SafeRelease(T** ppT)
 {
     if (*ppT)

@@ -37,9 +37,9 @@ protected:
 		int      inRate,    // input frequency
 		int      outRate,   // output frequency
 		short* pSrc,      // input pcm file
-		DWORD dwSrcSize,
+		int dwSrcSize,
 		vector<short>& vOut);
-	size_t ReadBytes(void* pBuffer, long nNumWords, short* pSrc, DWORD dwSrcSizeInWords, long& nCurrentPos);
+	int ReadBytes(void* pBuffer, int nNumWords, short* pSrc, int dwSrcSizeInWords, int& nCurrentPos);
  
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
@@ -48,7 +48,7 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public: 
-	afx_msg void OnEnChangeEdit1();
+	afx_msg void OnEnChangeMP3Path();
 	afx_msg void OnNMCustomdrawSlider1(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnResetSpeed();
@@ -57,4 +57,5 @@ public:
 	afx_msg void OnBnClickedStop();
 	afx_msg void OnBnClickedFastFwd();
 	afx_msg void OnBnClickedNearestSample();
+	afx_msg void OnBnClickedLowPass();
 };

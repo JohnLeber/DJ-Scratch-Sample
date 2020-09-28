@@ -304,7 +304,7 @@ double CMP3::GetPosition() {
 
 int CMP3::GetBitrate() {
     
-    return 44100.0; //
+    return 44100; //
     //return m_dwBitrate * 16;// 
 }
 

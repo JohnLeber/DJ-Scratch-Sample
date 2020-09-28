@@ -7,7 +7,7 @@
 #include "DJSample.h"
 #include "DJSampleDlg.h"
 #include "afxdialogex.h"
-
+#include "lowPassIIR.h"
 #include "mp3.h"
 
 #ifdef _DEBUG
@@ -51,6 +51,7 @@ END_MESSAGE_MAP()
 CDJSampleDlg::CDJSampleDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_DJSAMPLE_DIALOG, pParent)
 { 
+     
 	m_pDevice = 0; 
 	m_TargetFrequency = 0; 
     m_pRenderer = 0;
@@ -77,7 +78,7 @@ BEGIN_MESSAGE_MAP(CDJSampleDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON() 
-	ON_EN_CHANGE(IDC_EDIT1, &CDJSampleDlg::OnEnChangeEdit1)
+	ON_EN_CHANGE(IDC_EDIT1, &CDJSampleDlg::OnEnChangeMP3Path)
     ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &CDJSampleDlg::OnNMCustomdrawSlider1)
     ON_WM_HSCROLL()
     ON_BN_CLICKED(IDC_NORMAL_SPEED, &CDJSampleDlg::OnResetSpeed)
@@ -86,6 +87,7 @@ BEGIN_MESSAGE_MAP(CDJSampleDlg, CDialogEx)
     ON_BN_CLICKED(IDC_STOP, &CDJSampleDlg::OnBnClickedStop)
     ON_BN_CLICKED(IDC_FAST_FWD, &CDJSampleDlg::OnBnClickedFastFwd)
     ON_BN_CLICKED(IDC_NEAREST_SAMPLE, &CDJSampleDlg::OnBnClickedNearestSample)
+    ON_BN_CLICKED(IDC_LOW_PASS, &CDJSampleDlg::OnBnClickedLowPass)
 END_MESSAGE_MAP()
 //--------------------------------------------------------------------//
 // CDJSampleDlg message handlers
@@ -117,6 +119,8 @@ BOOL CDJSampleDlg::OnInitDialog()
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
+
+    CheckDlgButton(IDC_LOW_PASS, BST_CHECKED);
 
 	m_LoadFileEdit.SubclassDlgItem(IDC_EDIT1, this);
 	m_LoadFileEdit.EnableFileBrowseButton(NULL, _T("MP3 Files (*.mp3)|*.mp3|All Files (*.*)|*.*||"));
@@ -238,10 +242,11 @@ HCURSOR CDJSampleDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 //--------------------------------------------------------------------//
-void CDJSampleDlg::OnEnChangeEdit1()
+void CDJSampleDlg::OnEnChangeMP3Path()
 {
 	CString strPath;
-	GetDlgItemText(IDC_EDIT1, strPath);
+	GetDlgItemText(IDC_PATH, strPath);
+
     if (strPath.Right(4) != L".mp3") {
         AfxMessageBox(L"unrecognized file type");
         return;
@@ -263,7 +268,7 @@ void CDJSampleDlg::OnEnChangeEdit1()
         //seperate wave into left and right channels
         for (UINT h = 0; h < dwChannelSizeWords; h++)
         {
-            pLeft[h] = pSrc[2 * h];
+            pLeft[h]  = pSrc[2 * h];
             pRight[h] = pSrc[2 * h + 1];
         }
         vector<short> vLeft, vRight;
@@ -281,24 +286,40 @@ void CDJSampleDlg::OnEnChangeEdit1()
         //resample right channel
         ResampleIPP( pMP3->GetBitrate(), nDstBitrate, (short*)pRight, dwChannelSizeWords, vRight);
         
-        long nNewSizeL = vLeft.size();//size is in words
-        long nNewSizeR = vRight.size();
+        int nNewSizeL = (int)vLeft.size();//size is in words
+        int nNewSizeR = (int)vRight.size();
         ATLASSERT(nNewSizeL == nNewSizeR);
-        BYTE* pPCMDataL = new BYTE[2 * nNewSizeL];//convert size to bytes by multiplying by 2
-        BYTE* pPCMDataR = new BYTE[2 * nNewSizeR];
+
+        WORD* pPCMDataL = new WORD[nNewSizeL];//convert size to bytes by multiplying by 2
+        WORD* pPCMDataR = new WORD[nNewSizeR];
         
         //now recombine left and right channels in interleaved format
         vector<BYTE> vTest;
-        for (UINT h = 0; h < nNewSizeL; h++)            
+        for (int h = 0; h < nNewSizeL; h++)            
         {
-           pPCMDataL[2 * h]     = LOBYTE(vLeft[h]);
-           pPCMDataL[2 * h + 1] = HIBYTE(vLeft[h]);
-           pPCMDataR[2 * h]     = LOBYTE(vRight[h]);
-           pPCMDataR[2 * h + 1] = HIBYTE(vRight[h]);
+            pPCMDataL[h] = vLeft[h];
+            pPCMDataR[h] = vRight[h]; 
         } 
-        
+
+        //Create low pass filter version of wave for playback at faster speeds. This is to avoid potential aliiasing artifacts.
+        //Because the sampling freq is x2 the max freq the highest freq is 0.5 th max.
+        //If we play back at a maximum of twice the original speed then the cutoff freq for the low pass need to be at most 0.25, but drop it a below this to be safe
+        float nCutoffFreq = 0.22f;
+        WORD* pPCMFilteredDataL = new WORD[nNewSizeL];//convert size to bytes by multiplying by 2
+        WORD* pPCMFilteredDataR = new WORD[nNewSizeR];
+
+        CLowPassIIR LeftFilter;
+        LeftFilter.Init(nCutoffFreq);
+        LeftFilter.Filter(pPCMFilteredDataL, pPCMDataL, nNewSizeL);
+
+        CLowPassIIR RightFilter;
+        RightFilter.Init(nCutoffFreq);
+        RightFilter.Filter(pPCMFilteredDataR, pPCMDataR, nNewSizeL);
+
+         
         //Pass new wave to audio renderer       
-        m_pRenderer->SetBuffers(pPCMDataL, pPCMDataR, vLeft.size() * 2);
+        //m_pRenderer->SetBuffers(pPCMDataL, pPCMDataR, vLeft.size() * 2);
+        m_pRenderer->SetBuffers(pPCMDataL, pPCMDataR, pPCMFilteredDataL, pPCMFilteredDataR,(int) vLeft.size() * 2);
         OnResetSpeed();//reset play speed to normal speed
 
         delete[] pLeft;
@@ -307,10 +328,9 @@ void CDJSampleDlg::OnEnChangeEdit1()
     delete pMP3;
 }
 //--------------------------------------------------------------------//
-size_t CDJSampleDlg::ReadBytes(void* pBuffer, long nNumWords, short* pSrc, DWORD dwSrcSizeInWords, long& nCurrentPos)
+int CDJSampleDlg::ReadBytes(void* pBuffer, int nNumWords, short* pSrc, int dwSrcSizeInWords, int& nCurrentPos)
 {
-    size_t n;
-    n = min(nNumWords, dwSrcSizeInWords - nCurrentPos);
+    int n = min(nNumWords, dwSrcSizeInWords - nCurrentPos);
     memcpy(pBuffer, ((BYTE*)pSrc) + nCurrentPos * 2, n * 2);
     nCurrentPos = nCurrentPos + n;
     return n;
@@ -320,7 +340,7 @@ void CDJSampleDlg::ResampleIPP(
     int      inRate,    // input frequency
     int      outRate,   // output frequency
     short* pSrc,      // input pcm file
-    DWORD dwSrcSize,
+    int nSrcSize,
     vector<short>& vOut)     // output pcm file
 {
     //based on https://software.intel.com/content/www/us/en/develop/documentation/ipp-dev-reference/top/volume-1-signal-and-data-processing/filtering-functions/filtering-functions-1/polyphase-resampling-functions/resamplepolyphasegetfixedfilter.html
@@ -339,14 +359,14 @@ void CDJSampleDlg::ResampleIPP(
     outBuf = ippsMalloc_16s((int)((bufsize - history) * outRate / (float)inRate + 2));
     ippsZero_16s(inBuf, history);
   
-    long nCurrentPos = 0;
-    while ((inLen = ReadBytes(inBuf + lastread, bufsize - lastread, pSrc, dwSrcSize, nCurrentPos)) > 0) {
+    int nCurrentPos = 0;
+    while ((inLen = ReadBytes(inBuf + lastread, bufsize - lastread, pSrc, nSrcSize, nCurrentPos)) > 0) {
         inCount += inLen;
         lastread += inLen;
         ippsResamplePolyphaseFixed_16s(inBuf, lastread - history - (int)time,
             outBuf, 0.98f, &time, &outLen, state); 
 
-        int nCurrSize = vOut.size();
+        int nCurrSize = (int)vOut.size();
         vOut.resize(nCurrSize + outLen);
         memcpy(&vOut[nCurrSize], (BYTE*)outBuf, outLen * 2);
 
@@ -359,7 +379,7 @@ void CDJSampleDlg::ResampleIPP(
     ippsResamplePolyphaseFixed_16s(inBuf, lastread - (int)time,
         outBuf, 0.98f, &time, &outLen, state); 
 
-    int nCurrSize = vOut.size();
+    int nCurrSize = (int)vOut.size();
     vOut.resize(nCurrSize + outLen);
     memcpy(&vOut[nCurrSize], (BYTE*)outBuf, outLen * 2);
 
@@ -432,4 +452,9 @@ void CDJSampleDlg::OnBnClickedFastFwd()
 void CDJSampleDlg::OnBnClickedNearestSample()
 {
     m_pRenderer->SetNearestSample(IsDlgButtonChecked(IDC_NEAREST_SAMPLE) == BST_CHECKED);
+}
+//--------------------------------------------------------------------//
+void CDJSampleDlg::OnBnClickedLowPass()
+{
+    m_pRenderer->EnableLowPassFilter(IsDlgButtonChecked(IDC_LOW_PASS) == BST_CHECKED);
 }
