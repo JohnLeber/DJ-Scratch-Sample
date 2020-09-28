@@ -75,10 +75,10 @@ void CDJSampleDlg::DoDataExchange(CDataExchange* pDX)
 }
 //--------------------------------------------------------------------//
 BEGIN_MESSAGE_MAP(CDJSampleDlg, CDialogEx)
-	ON_WM_SYSCOMMAND()
-	ON_WM_PAINT()
-	ON_WM_QUERYDRAGICON() 
-	ON_EN_CHANGE(IDC_EDIT1, &CDJSampleDlg::OnEnChangeMP3Path)
+    ON_WM_SYSCOMMAND()
+    ON_WM_PAINT()
+    ON_WM_QUERYDRAGICON() 
+    ON_EN_CHANGE(IDC_EDIT1, &CDJSampleDlg::OnEnChangeMP3Path)
     ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &CDJSampleDlg::OnNMCustomdrawSlider1)
     ON_WM_HSCROLL()
     ON_BN_CLICKED(IDC_NORMAL_SPEED, &CDJSampleDlg::OnResetSpeed)
@@ -93,62 +93,62 @@ END_MESSAGE_MAP()
 // CDJSampleDlg message handlers
 BOOL CDJSampleDlg::OnInitDialog()
 {
-	CDialogEx::OnInitDialog();
+    CDialogEx::OnInitDialog();
 
-	// Add "About..." menu item to system menu.
+    // Add "About..." menu item to system menu.
 
-	// IDM_ABOUTBOX must be in the system command range.
-	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
-	ASSERT(IDM_ABOUTBOX < 0xF000);
+    // IDM_ABOUTBOX must be in the system command range.
+    ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
+    ASSERT(IDM_ABOUTBOX < 0xF000);
 
-	CMenu* pSysMenu = GetSystemMenu(FALSE);
-	if (pSysMenu != nullptr)
-	{
-		BOOL bNameValid;
-		CString strAboutMenu;
-		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
-		ASSERT(bNameValid);
-		if (!strAboutMenu.IsEmpty())
-		{
-			pSysMenu->AppendMenu(MF_SEPARATOR);
-			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
-		}
-	}
+    CMenu* pSysMenu = GetSystemMenu(FALSE);
+    if (pSysMenu != nullptr)
+    {
+        BOOL bNameValid;
+        CString strAboutMenu;
+        bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
+        ASSERT(bNameValid);
+        if (!strAboutMenu.IsEmpty())
+        {
+	        pSysMenu->AppendMenu(MF_SEPARATOR);
+	        pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
+        }
+    }
 
-	// Set the icon for this dialog.  The framework does this automatically
-	//  when the application's main window is not a dialog
-	SetIcon(m_hIcon, TRUE);			// Set big icon
-	SetIcon(m_hIcon, FALSE);		// Set small icon
+    // Set the icon for this dialog.  The framework does this automatically
+    //  when the application's main window is not a dialog
+    SetIcon(m_hIcon, TRUE);			// Set big icon
+    SetIcon(m_hIcon, FALSE);		// Set small icon
 
     CheckDlgButton(IDC_LOW_PASS, BST_CHECKED);
 
-	m_LoadFileEdit.SubclassDlgItem(IDC_EDIT1, this);
-	m_LoadFileEdit.EnableFileBrowseButton(NULL, _T("MP3 Files (*.mp3)|*.mp3|All Files (*.*)|*.*||"));
+    m_LoadFileEdit.SubclassDlgItem(IDC_EDIT1, this);
+    m_LoadFileEdit.EnableFileBrowseButton(NULL, _T("MP3 Files (*.mp3)|*.mp3|All Files (*.*)|*.*||"));
 
     m_Slider.SetRange(-100, 100);
     m_Slider.SetPos(50); 
 
-	HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-	if (FAILED(hr))
-	{
+    HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    if (FAILED(hr))
+    {
         AfxMessageBox(L"CoInitializeEx failed");
-	}
+    }
 
-	bool isDefaultDevice;
-	ERole role;
-	PickDevice(&m_pDevice, &isDefaultDevice, &role);
+    bool isDefaultDevice;
+    ERole role;
+    PickDevice(&m_pDevice, &isDefaultDevice, &role);
 
-	m_pRenderer = new CWASAPIRenderer(m_pDevice);
+    m_pRenderer = new CWASAPIRenderer(m_pDevice);
 
-	if (m_pRenderer->Initialize(m_TargetFrequency))
-	{
+    if (m_pRenderer->Initialize(m_TargetFrequency))
+    {
         if (m_pRenderer->Start())
         {
 
         }
-	} 
+    } 
 
-	return TRUE;  // return TRUE  unless you set the focus to a control
+    return TRUE;  // return TRUE  unless you set the focus to a control
 }
 //--------------------------------------------------------------------//
 bool CDJSampleDlg::PickDevice(IMMDevice** DeviceToUse, bool* IsDefaultDevice, ERole* DefaultDeviceRole)
