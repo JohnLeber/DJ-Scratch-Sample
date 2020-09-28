@@ -196,15 +196,15 @@ Exit:
 //--------------------------------------------------------------------//
 void CDJSampleDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
-	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
-	{
-		CAboutDlg dlgAbout;
-		dlgAbout.DoModal();
-	}
-	else
-	{
-		CDialogEx::OnSysCommand(nID, lParam);
-	}
+    if ((nID & 0xFFF0) == IDM_ABOUTBOX)
+    {
+	    CAboutDlg dlgAbout;
+	    dlgAbout.DoModal();
+    }
+    else
+    {
+	    CDialogEx::OnSysCommand(nID, lParam);
+    }
 }
 //--------------------------------------------------------------------//
 // If you add a minimize button to your dialog, you will need the code below
@@ -212,40 +212,40 @@ void CDJSampleDlg::OnSysCommand(UINT nID, LPARAM lParam)
 //  this is automatically done for you by the framework.
 void CDJSampleDlg::OnPaint()
 {
-	if (IsIconic())
-	{
-		CPaintDC dc(this); // device context for painting
+    if (IsIconic())
+    {
+        CPaintDC dc(this); // device context for painting
 
-		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
+        SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
-		// Center icon in client rectangle
-		int cxIcon = GetSystemMetrics(SM_CXICON);
-		int cyIcon = GetSystemMetrics(SM_CYICON);
-		CRect rect;
-		GetClientRect(&rect);
-		int x = (rect.Width() - cxIcon + 1) / 2;
-		int y = (rect.Height() - cyIcon + 1) / 2;
+        // Center icon in client rectangle
+        int cxIcon = GetSystemMetrics(SM_CXICON);
+        int cyIcon = GetSystemMetrics(SM_CYICON);
+        CRect rect;
+        GetClientRect(&rect);
+        int x = (rect.Width() - cxIcon + 1) / 2;
+        int y = (rect.Height() - cyIcon + 1) / 2;
 
-		// Draw the icon
-		dc.DrawIcon(x, y, m_hIcon);
-	}
-	else
-	{
-		CDialogEx::OnPaint();
-	}
+        // Draw the icon
+        dc.DrawIcon(x, y, m_hIcon);
+    }
+    else
+    {
+	    CDialogEx::OnPaint();
+    }
 }
 //--------------------------------------------------------------------//
 // The system calls this function to obtain the cursor to display while the user drags
 //  the minimized window.
 HCURSOR CDJSampleDlg::OnQueryDragIcon()
 {
-	return static_cast<HCURSOR>(m_hIcon);
+    return static_cast<HCURSOR>(m_hIcon);
 }
 //--------------------------------------------------------------------//
 void CDJSampleDlg::OnEnChangeMP3Path()
 {
-	CString strPath;
-	GetDlgItemText(IDC_PATH, strPath);
+    CString strPath;
+    GetDlgItemText(IDC_PATH, strPath);
 
     if (strPath.Right(4) != L".mp3") {
         AfxMessageBox(L"unrecognized file type");
