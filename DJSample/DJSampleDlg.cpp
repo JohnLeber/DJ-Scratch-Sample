@@ -300,7 +300,7 @@ void CDJSampleDlg::OnEnChangeMP3Path()
             pPCMDataL[h] = vLeft[h];
             pPCMDataR[h] = vRight[h]; 
         } 
-
+         
         //Create low pass filter version of wave for playback at faster speeds. This is to avoid potential aliiasing artifacts.
         //Because the sampling freq is x2 the max freq the highest freq is 0.5 th max.
         //If we play back at a maximum of twice the original speed then the cutoff freq for the low pass need to be at most 0.25, but drop it a below this to be safe
