@@ -1,5 +1,7 @@
 # DJ Scratch Sample
 
+**Introduction**
+
 DJ hardware controllers allow DJs to emulate traditional vinyl turntables by sending signals from the controller turntable to the PC DJ software in order to alter the speed of the PC audio playback thus emulating "scratching". This technique has given DJs the option of replacing suitcases of vinyl records with a disk of MP3 files. For this to be possible the PC software must be able to dynamically resample the audio signal so that the speed and direction of playback can be controlled. This needs to be done with as little latency as possible. This [sample application](https://github.com/nodecomplete/DJ-Scratch-Sample/blob/master/ScreenShot.jpg?raw=true) shows how this may be achieved in Microsoft Windows using [WASAPI](https://docs.microsoft.com/en-us/windows/win32/coreaudio/wasapi) with some help from [Intel's IPP library](https://software.intel.com/content/www/us/en/develop/tools/integrated-performance-primitives.html). The application does the following:
 1) allows a user to select an MP3 file. The MP3 file must have exactly two channels (i.e. stereo) and be sampled at 44100Hz.
 2) extracts the audio signal from the MP3 in PCM wave format.
@@ -9,10 +11,10 @@ DJ hardware controllers allow DJs to emulate traditional vinyl turntables by sen
 6) allows a user to emulate a turntable by using a slider to dynamically control the speed and direction of playback by re-sampling/interpolating the wave just before it is passed to the WASAPI buffer.
 
 
-**Build Requirements**
+**Building the application**
 
 1) [Intel's IPP library](https://software.seek.intel.com/performance-libraries) must be installed first. If Intel IPP is not isntalled, close Visual Studio before installing it. After installing Intel IPP, open the Project Settings in Visual Studio 2019 and under **Configuration Properties** make sure there is an entry called **Intel Performance Libraries** and check that the **Use Intel IPP** option is set to **Single-threaded Static Library**.
-2) The project was written using Visual studio 2019 (make sure the desktop c++ and MFC options are installed).
+2) The project was written using Visual studio 2019 (make sure the desktop C++ and MFC options are installed).
 
 **Credits**
 
