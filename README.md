@@ -5,13 +5,13 @@ DJ hardware controllers allow DJs to emulate traditional vinyl turntables by sen
 2) extracts the audio signal from the MP3 in PCM wave format.
 3) uses Intel IPP to re-sample the resulting wave file from 44100Hz to the sampling frequency used by WASAPI (normally 48000Hz).
 4) duplicates the resulting wave form and passes it through a low pass filter with a cutoff just below 0.25 the sampling frequency. This is to avoid potential aliasing artifacts if played back faster than the original speed. The application currently supports playback at a maximum of twice the original recorded speed. Any higher than this then the cutoff frequency would need to be lower then 0.25. When played back at the normal speed or slower the first (unfiltered) waveform is used.
-5) passes the 48000 Hz wave to the WASAPI audio renderer that has been opened in shared mode.
+5) passes the two 48000 Hz signals to the WASAPI audio renderer.
 6) allows a user to emulate a turntable by using a slider to dynamically control the speed and direction of playback by re-sampling/interpolating the wave just before it is passed to the WASAPI buffer.
 
 
 **Build Requirements**
 
-1) [Intel's IPP library](https://software.seek.intel.com/performance-libraries) must be installed first. The version used here is 2020.2.254
+1) [Intel's IPP library](https://software.seek.intel.com/performance-libraries) must be installed first. If Intel IPP is not isntalled, close Visual Studio before installing it. After installing Intel IPP, open the Project Settings in Visual Studio 2019 and under **Configuration Properties** make sure there is an entry called **Intel Performance Libraries** and check that the **Use Intel IPP** option is set to **Single-threaded Static Library**.
 2) The project was written using Visual studio 2019 (make sure the desktop c++ and MFC options are installed).
 
 **Credits**
