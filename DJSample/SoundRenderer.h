@@ -16,19 +16,8 @@ class CWASAPIRenderer : public IUnknown
     WORD* m_pPCMFilteredDataR;
     int m_nPCMBufferSize;
     long m_nPosition;
-    float m_nLastPosition;
-    CLowPassIIR* m_pLeftIIR;
-    CLowPassIIR* m_pRightIIR;
-    //Ipp8u* m_pIIRWorkingBuffer;
-    //Ipp64f m_pTaps[2 * (LOWPASS_FILTER_ORDER + 1)]; 
-    //IppsIIRState_64f* m_pCTX;
-    //Ipp32f* m_pFilterX;
-    //Ipp32f* m_pFilterY;
-    //Ipp32f* m_pDelayLine;
-    //long m_nFilterCutoff; 
-
+    double m_nLastPosition; 
 public:
-   // CWASAPIRenderer(void);
     ~CWASAPIRenderer(void);
     void SetSpeed(LONG nSpeed);
       

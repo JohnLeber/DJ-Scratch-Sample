@@ -316,10 +316,8 @@ void CDJSampleDlg::OnEnChangeMP3Path()
         RightFilter.Init(nCutoffFreq);
         RightFilter.Filter(pPCMFilteredDataR, pPCMDataR, nNewSizeL);
 
-         
-        //Pass new wave to audio renderer       
-        //m_pRenderer->SetBuffers(pPCMDataL, pPCMDataR, vLeft.size() * 2);
-        m_pRenderer->SetBuffers(pPCMDataL, pPCMDataR, pPCMFilteredDataL, pPCMFilteredDataR,(int) vLeft.size() * 2);
+        //Pass both filtered and unfiltered wave files to audio renderer       
+        m_pRenderer->SetBuffers(pPCMDataL, pPCMDataR, pPCMFilteredDataL, pPCMFilteredDataR, nNewSizeL);
         OnResetSpeed();//reset play speed to normal speed
 
         delete[] pLeft;

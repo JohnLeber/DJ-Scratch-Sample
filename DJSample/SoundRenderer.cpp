@@ -499,29 +499,30 @@ DWORD CWASAPIRenderer::DoRenderThread()
                             {
                                 wLeft  = m_pPCMDataL[m_nPosition];
                                 wRight = m_pPCMDataR[m_nPosition]; 
-                                m_nLastPosition = (float)m_nPosition;
+                                m_nLastPosition = (double)m_nPosition;
                             }
-                            else if ( m_nSpeed != NORMAL_SPEED)//speed up or slowed down
+                            else if ( m_nSpeed != NORMAL_SPEED)//sped up or slowed down
                             { 
                                 WORD* pLeftChannel  = m_pPCMDataL;
                                 WORD* pRightChannel = m_pPCMDataR;
                                 if (m_nLowPassFilter > 0 && (m_nSpeed > NORMAL_SPEED || m_nSpeed < NORMAL_SPEED))
-                                {//if playing back at a faster speed, play the wave that has beeen filtered through the low pass filter to avoid potenmtial aliasing artifacts
+                                {
+                                    //if playing back at a faster speed, play the wave that has been filtered through the low pass filter to avoid potential aliasing artifacts
                                     pLeftChannel = m_pPCMFilteredDataL;
                                     pRightChannel = m_pPCMFilteredDataL;
                                 }
                                 wLeft = 0;
                                 wRight = 0;
-                                float nSpeed = m_nSpeed / (float)NORMAL_SPEED;
+                                double nSpeed = m_nSpeed / (double)NORMAL_SPEED;
                                 //if nSpeed is -ve then we are playing the wave form in reverse
-                                float nPosition = m_nLastPosition + nSpeed;
+                                double nPosition = m_nLastPosition + nSpeed;
                                 m_nLastPosition = nPosition;
                                 int nPos1 = (int)floor(nPosition);
                                 int nPos2 = nPos1 + 1;// ceil(nPosition);
                                 if (nSpeed < 0) nPos2 = nPos1 + 1;                                
-                                if (nPos1 < m_nPCMBufferSize / 2 && nPos1 > 0 && nPos2 > 0)
+                                if (nPos1 < m_nPCMBufferSize- 1 && nPos1 > 0 && nPos2 > 0)
                                 {
-                                    float weight = nPosition - nPos1;
+                                    double weight = nPosition - nPos1;
                                     //first the left channel
                                     w1 = (short)pLeftChannel[nPos1];
                                     w2 = (short)pLeftChannel[nPos2];
@@ -539,9 +540,9 @@ DWORD CWASAPIRenderer::DoRenderThread()
                                     }
                                     m_nPosition = nPos2;
                                 }
-                                if (m_nPosition > m_nPCMBufferSize / 2)
+                                if (m_nPosition > m_nPCMBufferSize)
                                 {
-                                    m_nPosition = m_nPCMBufferSize / 2;
+                                    m_nPosition = m_nPCMBufferSize;
                                 }
                                 else if (m_nPosition < 0 || m_nLastPosition < 0)
                                 {
@@ -552,7 +553,7 @@ DWORD CWASAPIRenderer::DoRenderThread()
 
                             
 
-                            if (m_nPosition + 1 < m_nPCMBufferSize / 2)
+                            if (m_nPosition + 1 < m_nPCMBufferSize)
                             {
                                 *pS = wLeft;
                                 *(pS + 1) = wRight;
