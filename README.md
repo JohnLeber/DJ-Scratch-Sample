@@ -13,7 +13,7 @@ DJ hardware controllers allow DJs to emulate traditional vinyl turntables by sen
 
 **Building the application**
 
-1) [Intel's IPP library](https://software.seek.intel.com/performance-libraries) must be installed first. If Intel IPP is not isntalled, close Visual Studio before installing it. After installing Intel IPP, open the Project Settings in Visual Studio 2019 and under **Configuration Properties** make sure there is an entry called **Intel Performance Libraries** and check that the **Use Intel IPP** option is set to **Single-threaded Static Library**.
+1) [Intel's IPP library](https://software.seek.intel.com/performance-libraries) must be installed first. If Intel IPP is not installed, close Visual Studio before installing it. After installing Intel IPP, open the Project Settings in Visual Studio 2019 and under **Configuration Properties** make sure there is an entry called **Intel Performance Libraries** and check that the **Use Intel IPP** option is set to **Single-threaded Static Library**.
 2) The project was written using Visual studio 2019 (make sure the desktop C++ and MFC options are installed).
 
 **Credits**
