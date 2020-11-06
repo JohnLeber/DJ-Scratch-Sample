@@ -20,3 +20,7 @@ DJ hardware controllers allow DJs to emulate traditional vinyl turntables by sen
 
 1) The mp3 loading code was primarily written by Alexandre Mutel and is available [here](http://code4k.blogspot.com/2010/05/playing-mp3-in-c-using-plain-windows.html) or [here](https://xoofx.com/blog/2010/05/21/playing-mp3-in-c-using-plain-windows/).
 2) The WASAPI code was modified from [here](https://github.com/microsoft/Windows-classic-samples/blob/master/Samples/Win7Samples/multimedia/audio/RenderSharedTimerDriven/WASAPIRenderer.cpp).
+
+![alt text](https://github.com/nodecomplete/DJ-Scratch-Sample/blob/master/ScreenShot.jpg)
+ 
+
