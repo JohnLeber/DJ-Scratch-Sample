@@ -10,6 +10,7 @@ DJ hardware controllers allow DJs to emulate traditional vinyl turntables by sen
 5) passes the two 48000 Hz signals to the WASAPI audio renderer.
 6) allows a user to emulate a turntable by using a slider to dynamically control the speed and direction of playback by re-sampling/interpolating the wave just before it is passed to the WASAPI buffer.
 
+![alt text](https://github.com/nodecomplete/DJ-Scratch-Sample/blob/master/ScreenShot.jpg)
 
 **Building the application**
 
@@ -21,6 +22,6 @@ DJ hardware controllers allow DJs to emulate traditional vinyl turntables by sen
 1) The mp3 loading code was primarily written by Alexandre Mutel and is available [here](http://code4k.blogspot.com/2010/05/playing-mp3-in-c-using-plain-windows.html) or [here](https://xoofx.com/blog/2010/05/21/playing-mp3-in-c-using-plain-windows/).
 2) The WASAPI code was modified from [here](https://github.com/microsoft/Windows-classic-samples/blob/master/Samples/Win7Samples/multimedia/audio/RenderSharedTimerDriven/WASAPIRenderer.cpp).
 
-![alt text](https://github.com/nodecomplete/DJ-Scratch-Sample/blob/master/ScreenShot.jpg)
+
  
 
