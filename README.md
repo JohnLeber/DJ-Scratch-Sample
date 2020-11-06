@@ -10,12 +10,13 @@ DJ hardware controllers allow DJs to emulate traditional vinyl turntables by sen
 5) passes the two 48000 Hz signals to the WASAPI audio renderer.
 6) allows a user to emulate a turntable by using a slider to dynamically control the speed and direction of playback by re-sampling/interpolating the wave just before it is passed to the WASAPI buffer.
 
-![alt text](https://github.com/nodecomplete/DJ-Scratch-Sample/blob/master/ScreenShot.jpg)
 
 **Building the application**
 
 1) [Intel's IPP library](https://software.seek.intel.com/performance-libraries) must be installed first. If Intel IPP is not installed, close Visual Studio before installing it. After installing Intel IPP, open the Project Settings in Visual Studio 2019 and under **Configuration Properties** make sure there is an entry called **Intel Performance Libraries** and check that the **Use Intel IPP** option is set to **Single-threaded Static Library**.
 2) The project was written using Visual studio 2019 (make sure the desktop C++ and MFC options are installed).
+
+![alt text](https://github.com/nodecomplete/DJ-Scratch-Sample/blob/master/ScreenShot.jpg)
 
 **Credits**
 
