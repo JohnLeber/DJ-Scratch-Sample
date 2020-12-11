@@ -275,7 +275,7 @@ void CDJSampleDlg::OnEnChangeMP3Path()
         int nDstBitrate = m_pRenderer->SamplesPerSecond();
         //TODO: check if dest and src bitrates are the same, then skip next step
 
-        //resample left and rights channel from 44.1kHz to 44.8 kHz
+        //resample left and right channel from 44.1kHz to 48 kHz
         ResampleIPP(
             pMP3->GetBitrate(),    // input frequency(most likely 44100)
             nDstBitrate,   // output frequency (most likely 48000)
